@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Draw Triangle</title>
+        <meta charset="utf-8">
+        <script>
+            window.onload = function() {
+	            var canvas = document.getElementById("myCanvas");
+	            var context = canvas.getContext("2d");
+            	drawTriangle(canvas, context);
+            }
+            function drawTriangle(canvas, context) {
+	            context.beginPath();
+                context.moveTo(100, 150);
+                context.lineTo(250, 75);
+                context.lineTo(125, 30);
+                context.closePath();
+                context.lineWidth = 5;
+                context.stroke();
+                context.fillStyle = "red";
+                context.fill();
+            }
+        </script>
+        <style>
+            canvas { 
+                border: 1px solid black;
+            }
+        </style>        
+    </head>
+    <body>
+        <canvas width="300" height="300" id="myCanvas"></canvas>
+    </body>
+</html>

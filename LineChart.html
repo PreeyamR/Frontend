@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
+<style>
+  
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #FF671F transparent transparent transparent;
+	
+}
+
+.tooltip .tooltiptext {
+    visibility: visible;
+    width: 80px;
+    background-color: #FF671F;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+	
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+.span_pseudo, .chiller_cb span:before, .chiller_cb span:after {
+  content: "";
+  display: inline-block;
+  background: #fff;
+  width: 0;
+  height: 0.2rem;
+  position: absolute;
+  transform-origin: 0% 0%;
+}
+
+.chiller_cb {
+  position: relative;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+}
+.chiller_cb input {
+  display: none;
+}
+.chiller_cb input:checked ~ span {
+  background: #e76c27;
+  border-color: #e76c27;
+}
+.chiller_cb input:checked ~ span:before {
+  width: 1rem;
+  height: 0.15rem;
+  transition: width 0.1s;
+  transition-delay: 0.3s;
+}
+.chiller_cb input:checked ~ span:after {
+  width: 0.4rem;
+  height: 0.15rem;
+  transition: width 0.1s;
+  transition-delay: 0.2s;
+}
+.chiller_cb input:disabled ~ span {
+  background: #ececec;
+  border-color: #dcdcdc;
+}
+.chiller_cb input:disabled ~ label {
+  color: #dcdcdc;
+}
+.chiller_cb input:disabled ~ label:hover {
+  cursor: default;
+}
+.chiller_cb label {
+  padding-left: 2rem;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  margin-bottom:0;
+}
+.chiller_cb span {
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid #ccc;
+  position: absolute;
+  left: 0;
+  transition: all 0.2s;
+  z-index: 1;
+  box-sizing: content-box;
+}
+.chiller_cb span:before {
+  transform: rotate(-55deg);
+  top: 1rem;
+  left: 0.37rem;
+}
+.chiller_cb span:after {
+  transform: rotate(35deg);
+  bottom: 0.35rem;
+  left: 0.2rem;
+}
+.verticalLine {
+  border-left: 1px dashed #000000;
+}
+</style>
+</head>
+<body>
+
+<h2>Line Chart</h2>
+<div style="width:1000px;height:100px;">
+<div id="chartLegend"></div>
+<div id="chartTooltip"></div>
+<canvas id="linechart"></canvas>
+</div>
+</body>
+<script>
+Chart.defaults.scale.gridLines.display = false;
+Chart.defaults.global.legend.display = false;
+Chart.defaults.global.legendCallback = this.customLegendCallback;
+Chart.defaults.global.elements.line.tension = 0;
+Chart.defaults.global.tooltips.enabled = false;
+Chart.defaults.global.tooltips.custom = this.customTooltip;
+
+/**Chart.plugins.register({
+  afterDatasetsDraw: function(chartInstance, easing) {
+    // To only draw at the end of animation, check for easing === 1
+	
+    var ctx = chartInstance.chart.ctx;
+	
+    // for each line
+	
+	for(let i in chartInstance.data.datasets){
+		if(chartInstance.data.datasets[i].label === 'Scale'){
+			var meta = chartInstance.getDatasetMeta(i);
+			
+			if (!meta.hidden) {
+				 meta.data.forEach(function(element, index) {
+					console.log(element);
+				 });
+			}
+		}
+	}
+	    chartInstance.data.datasets.forEach(function(dataset, i) {
+	if(dataset.label === 'Scale'){
+	
+      var meta = chartInstance.getDatasetMeta(i);
+	  
+      if (!meta.hidden) {
+	  
+	  
+       meta.data.forEach(function(element, index) {
+	   if(index == dataset.data.length-1){console.log("Priyam");}
+	   //console.log(index);
+          ctx.fillStyle = element._model.borderColor;
+
+          var fontSize = 19;
+          var fontStyle = 'normal';
+          var fontFamily = 'Helvetica Neue';
+          ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
+
+          // Just naively convert to string for now
+          var dataString = "";
+          if ((index != 0) && (index != 4)) {
+            //dataString = number_format(dataset.data[index].toString(), 0, ',', ' ');
+          }
+
+          var padding = 20;
+          var position = element.tooltipPosition();
+          var thickness = 1;
+          position.x -= 10;
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+
+          // draw text
+          ctx.fillText(dataString, position.x, position.y - (fontSize / 2) - padding);
+
+          // underline text
+          //var underlinePoint = underline(ctx, dataString, position.x, position.y - (fontSize / 2) - padding, fontSize, element._model.borderColor, thickness, -5);
+
+          // draw line connecting text underline with point
+          ctx.beginPath();
+          ctx.strokeStyle = element._model.borderColor;
+          ctx.lineWidth = thickness;
+          ctx.moveTo(element._model.x, element._model.y);
+          //ctx.lineTo(underlinePoint.x, underlinePoint.y);
+          ctx.stroke();
+		  
+        });
+      }
+	  }
+    });
+  }
+});*/
+
+function customTooltip(tooltipModel){
+var tooltipEl = document.getElementById('chartTooltip');
+
+                // Create element on first render
+                
+
+                // Hide if no tooltip
+				
+                if (tooltipModel.opacity === 0) {
+					
+                    tooltipEl.style.opacity = 0;
+                    return;
+                }
+
+                // Set caret Position
+				
+                /**tooltipEl.classList.remove('above', 'below', 'no-transform');
+				
+                if (tooltipModel.yAlign) {
+                    tooltipEl.classList.add(tooltipModel.yAlign);
+                } else {
+                    tooltipEl.classList.add('no-transform');
+                }*/
+				tooltipEl.classList.add("tooltip");
+                function getBody(bodyItem) {
+					//console.log(bodyItem);
+                    return bodyItem.lines;
+                }
+
+                // Set Text
+				//console.log(tooltipModel);
+                if (tooltipModel.body) {
+                    //var titleLines = tooltipModel.title || [];
+					
+                    //var bodyLines = tooltipModel.body.map(getBody);
+
+                    //var innerHtml = '<thead>';
+
+                    /**titleLines.forEach(function(title) {
+                        innerHtml += '<tr><th>' + title + '</th></tr>';
+                    });
+                    innerHtml += '</thead><tbody>';*/
+					
+                    
+                       // var colors = tooltipModel.labelColors[i];
+                        //var style = 'background: orange' ;
+                        //style += '; border-color: orange' ;
+                        //style += '; border-width: 2px';
+                        //var span = '<span style="' + style + '"></span>';
+						var innerHtml = '<span class="tooltiptext line">'+tooltipModel.dataPoints[0].yLabel+' lbs.</span>'
+                        //var innerHtml =  span + tooltipModel.dataPoints[0].yLabel+' lbs.';
+                    
+                    //innerHtml += '</tbody>';
+
+                    //var tableRoot = tooltipEl.querySelector('table');
+                    tooltipEl.innerHTML = innerHtml;
+                }
+
+                // `this` will be the overall tooltip
+                var position = this._chart.canvas.getBoundingClientRect();
+
+
+                // Display, position, and set styles for font
+                tooltipEl.style.opacity = 1;
+                tooltipEl.style.position = 'absolute';
+                tooltipEl.style.left = tooltipModel.caretX - 36 + 'px';
+                tooltipEl.style.top = position.top + tooltipModel.caretY - 70 + 'px';
+                tooltipEl.style.fontFamily = tooltipModel._bodyFontFamily;
+                tooltipEl.style.fontSize = tooltipModel.bodyFontSize + 'px';
+                tooltipEl.style.fontStyle = tooltipModel._bodyFontStyle;
+                tooltipEl.style.padding = tooltipModel.yPadding + 'px ' + tooltipModel.xPadding + 'px';
+				//console.log(tooltipEl);
+            }
+		
+function customLegendCallback(chart){
+	//console.log(chart.data.datasets);
+	var text = [];
+	
+	for(var i in chart.data.datasets){
+		if(chart.data.datasets[i].label !== 'Scale'){
+		text.push('<div class="chiller_cb">');
+		console.log(chart.legend);
+		text.push('<input type="checkbox" id="label-'+i+'" name="label-'+i+'" onclick="updateDataset(event, ' + '\'' + chart.legend.legendItems[i].datasetIndex + '\'' + ')">');
+		text.push('<label for="label-'+i+'">'+chart.data.datasets[i].label+'</label>');
+		text.push('<span></span>');
+		text.push('</div>');
+		console.log(chart.data.datasets[i].label);
+		}
+	}
+	return text.join("");
+}
+var ctx = document.getElementById("linechart").getContext('2d');
+var gradientStroke = ctx.createLinearGradient(0, 550, 0, 0);
+gradientStroke.addColorStop(0, "#FF7E41");
+gradientStroke.addColorStop(1, "#FBDF79");
+var lineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['1 June','2 June','3 June','4 June','5 June','6 June','7 June','8 June','9 June','10 June',
+			'11 June','12 June','13 June','14 June','15 June','16 June','17 June','18 June','19 June','20 June',
+			'21 June','22 June','23 June','24 June','25 June','26 June','27 June','28 June','29 June','30 June'],
+    datasets: [{ 
+        data: [155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155,155],
+        label: "Goal",
+        borderColor: "green",
+        fill: +1,
+		hidden : true,
+		pointRadius : 0,
+		pointHoverRadius:0
+      }, { 
+        data: [165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165,165],
+        label: "Transitional Zone",
+        borderColor: "transparent",
+        fill: -1,
+		hidden : true,
+		pointRadius : 0,
+		pointHoverRadius:0
+      }, { 
+        data: [190,189.9,188,188,188.3,187.9,187.9,187.5,187,189,188,187.9,187.6,187,187.7,187.3,187,186.8,186.4,185.8,185.2,183,182.8,182,181.6,181,180,180.9,180.5,179.9],
+        label: "Scale",
+        borderColor: 'transparent',
+		backgroundColor : gradientStroke,
+		pointBackgroundColor : '#FF7E41',
+		pointHoverBorderColor : '#FF7E41',
+		pointHoverBackgroundColor : 'white',
+		pointRadius : 3.5,
+        fill: true
+      }
+    ]
+  },
+  options: {
+	responsive : true,
+	
+	scales: {
+                xAxes: [{
+                    ticks:{
+                        maxTicksLimit: 2, 
+                        labelOffset: -5, 
+                        maxRotation:0  
+                    }
+                }],
+                yAxes: [{
+                    
+                    ticks: {
+                        min: 130,
+                        max:190,
+                        stepSize:20
+                    }
+                }]
+            },
+	animation : {
+		onComplete : function(animation){
+		console.log(animation);
+		}
+	},
+	/**tooltips : {
+		callbacks : {
+			label : function(tooltipItem, data){
+				console.log(tooltipItem);
+				console.log(data);
+			}
+		},
+		
+	},*/
+    title: {
+      display: true,
+      text: 'World population per region (in millions)'
+    }
+  }
+});
+document.getElementById("chartLegend").innerHTML = lineChart.generateLegend();
+function updateDataset(e, datasetIndex){
+	var index = datasetIndex;
+        var ci = lineChart;
+        var meta = ci.getDatasetMeta(index);
+console.log(meta);
+        // See controller.isDatasetVisible comment
+        meta.hidden = meta.hidden === null? !ci.data.datasets[index].hidden : null;
+
+        // We hid a dataset ... rerender the chart
+        ci.update();
+	
+}
+
+Chart.helpers.each(document.getElementById('legend-0'), function(legendNode, index) {
+        Chart.helpers.addEvent(legendNode, 'mouseover', function() {
+            var activeSegment = window.myDoughnut.data.datasets[0].metaData[index];
+            window.myDoughnut.tooltip.initialize();
+            window.myDoughnut.tooltip._active = [activeSegment];
+            window.myDoughnut.tooltip.update(true);
+            window.myDoughnut.render(window.myDoughnut.options.hover.animationDuration, true);
+        });
+        Chart.helpers.addEvent(legendNode, 'mouseout', function() {
+            window.myDoughnut.tooltip._active = [];
+            window.myDoughnut.tooltip.update(true);
+        });
+    });
+</script>
+
+</html> 
+
+
+
